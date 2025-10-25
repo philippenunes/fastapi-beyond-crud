@@ -1,21 +1,31 @@
-from sqlmodel import create_engine, SQLModel
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlmodel import SQLModel
+from sqlalchemy.ext.asyncio import create_async_engine
 from src.books.models import Book
 from src.config import Config
-from sqlalchemy.ext.asyncio.session import AsyncSession
+from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlalchemy.orm import sessionmaker
+from typing import AsyncGenerator
+import re
+import ssl
 
-async_engine = AsyncEngine(create_engine(url=Config.DATABASE_URL, echo=True))
+async_engine = create_async_engine(
+    re.sub(r"^postgresql:", "postgresql+asyncpg:", Config.DATABASE_URL),
+    echo=True,
+    pool_pre_ping=True,
+    pool_recycle=300,
+    connect_args={
+        "ssl": ssl.create_default_context(),
+        "server_settings": {"jit": "off"},
+    },
+)
 
 
 async def init_db():
     async with async_engine.begin() as conn:
-
         await conn.run_sync(SQLModel.metadata.create_all)
 
 
-async def get_session() -> AsyncSession:
-
+async def get_session() -> AsyncGenerator[AsyncSession, None]:
     Session = sessionmaker(
         bind=async_engine, class_=AsyncSession, expire_on_commit=False
     )
