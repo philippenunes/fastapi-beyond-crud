@@ -6,7 +6,8 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from .utils import create_access_token, verify_password
 from fastapi.responses import JSONResponse
 from datetime import timedelta, datetime
-from .dependencies import RefreshTokenBearer
+from .dependencies import RefreshTokenBearer, AccessTokenBearer
+from src.db.redis import add_jti_to_blacklist
 
 auth_router = APIRouter()
 user_service = UserService()
@@ -89,4 +90,17 @@ async def get_new_access_token(token_details=Depends(RefreshTokenBearer())):
     raise HTTPException(
         status_code=status.HTTP_400_BAD_REQUEST,
         detail="Invalide or expired refresh token.",
+    )
+
+
+@auth_router.get("/logout")
+async def revoke_user(token_details: dict = Depends(AccessTokenBearer())):
+
+    jti = token_details["jti"]
+
+    await add_jti_to_blacklist(jti)
+
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "Logout successful. Token revoked."},
     )
