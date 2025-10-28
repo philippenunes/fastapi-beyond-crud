@@ -6,27 +6,40 @@ from src.db.main import get_session
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from .service import BookService
 from .schemas import BookCreateModel
+from src.auth.dependencies import AccessTokenBearer
 
 book_router = APIRouter()
 book_service = BookService()
+access_token_bearer = AccessTokenBearer()
 
 
 @book_router.get("/", response_model=List[Book])
-async def get_all_books(session: AsyncSession = Depends(get_session)):
+async def get_all_books(
+    session: AsyncSession = Depends(get_session),
+    user_details=Depends(access_token_bearer),
+) -> List[Book]:
+
+    print(user_details)
     books = await book_service.get_all_books(session)
     return books
 
 
 @book_router.post("/", status_code=status.HTTP_201_CREATED)
 async def create_book(
-    book: BookCreateModel, session: AsyncSession = Depends(get_session)
+    book: BookCreateModel,
+    session: AsyncSession = Depends(get_session),
+    user_details=Depends(access_token_bearer),
 ) -> dict:
     new_book = await book_service.create_book(book, session)
     return {"message": "Book created successfully", "book": new_book}
 
 
 @book_router.get("/{book_uid}", response_model=Book)
-async def get_book(book_uid: str, session: AsyncSession = Depends(get_session)) -> dict:
+async def get_book(
+    book_uid: str,
+    session: AsyncSession = Depends(get_session),
+    user_details=Depends(access_token_bearer),
+) -> dict:
     book = await book_service.get_book(book_uid, session)
     if book:
         return book
@@ -39,6 +52,7 @@ async def update_book(
     book_uid: str,
     book_update: BookUpdateModel,
     session: AsyncSession = Depends(get_session),
+    user_details=Depends(access_token_bearer),
 ) -> dict:
     update_book = await book_service.update_book(book_uid, book_update, session)
     if update_book:
@@ -49,7 +63,9 @@ async def update_book(
 
 @book_router.delete("/{book_uid}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_book(
-    book_uid: str, session: AsyncSession = Depends(get_session)
+    book_uid: str,
+    session: AsyncSession = Depends(get_session),
+    user_details=Depends(access_token_bearer),
 ) -> None:
     book_deleted = await book_service.delete_book(book_uid, session)
     if book_deleted:

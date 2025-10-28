@@ -1,5 +1,5 @@
 from passlib.context import CryptContext
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from src.config import Config
 import uuid
 import jwt
@@ -24,7 +24,7 @@ def create_access_token(
     payload = {}
 
     payload["user"] = user_data
-    payload["exp"] = datetime.now() + (
+    payload["exp"] = datetime.now(timezone.utc) + (
         expiration if expiration is not None else timedelta(seconds=ACCESS_TOKEN_EXPIRE)
     )
     payload["jti"] = str(uuid.uuid4())
