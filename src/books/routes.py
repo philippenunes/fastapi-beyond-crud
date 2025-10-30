@@ -6,14 +6,15 @@ from src.db.main import get_session
 from sqlalchemy.ext.asyncio.session import AsyncSession
 from .service import BookService
 from .schemas import BookCreateModel
-from src.auth.dependencies import AccessTokenBearer
+from src.auth.dependencies import AccessTokenBearer, RoleChecker
 
 book_router = APIRouter()
 book_service = BookService()
 access_token_bearer = AccessTokenBearer()
+role_checker = Depends(RoleChecker(allowed_roles=["admin", "user"]))
 
 
-@book_router.get("/", response_model=List[Book])
+@book_router.get("/", response_model=List[Book], dependencies=[role_checker])
 async def get_all_books(
     session: AsyncSession = Depends(get_session),
     user_details=Depends(access_token_bearer),
@@ -24,7 +25,7 @@ async def get_all_books(
     return books
 
 
-@book_router.post("/", status_code=status.HTTP_201_CREATED)
+@book_router.post("/", status_code=status.HTTP_201_CREATED, dependencies=[role_checker])
 async def create_book(
     book: BookCreateModel,
     session: AsyncSession = Depends(get_session),
@@ -34,7 +35,7 @@ async def create_book(
     return {"message": "Book created successfully", "book": new_book}
 
 
-@book_router.get("/{book_uid}", response_model=Book)
+@book_router.get("/{book_uid}", response_model=Book, dependencies=[role_checker])
 async def get_book(
     book_uid: str,
     session: AsyncSession = Depends(get_session),
@@ -47,7 +48,7 @@ async def get_book(
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
 
 
-@book_router.patch("/{book_uid}")
+@book_router.patch("/{book_uid}", dependencies=[role_checker])
 async def update_book(
     book_uid: str,
     book_update: BookUpdateModel,
@@ -61,7 +62,9 @@ async def update_book(
     raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
 
 
-@book_router.delete("/{book_uid}", status_code=status.HTTP_204_NO_CONTENT)
+@book_router.delete(
+    "/{book_uid}", status_code=status.HTTP_204_NO_CONTENT, dependencies=[role_checker]
+)
 async def delete_book(
     book_uid: str,
     session: AsyncSession = Depends(get_session),
