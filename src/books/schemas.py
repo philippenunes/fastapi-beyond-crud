@@ -1,6 +1,11 @@
+from __future__ import annotations
 from pydantic import BaseModel
 from datetime import datetime, date
 import uuid
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.reviews.schemas import ReviewModel
 
 
 class Book(BaseModel):
@@ -13,6 +18,10 @@ class Book(BaseModel):
     language: str
     created_at: datetime
     updated_at: datetime
+
+
+class BookDetailModel(Book):
+    reviews: List[ReviewModel]
 
 
 class BookCreateModel(BaseModel):

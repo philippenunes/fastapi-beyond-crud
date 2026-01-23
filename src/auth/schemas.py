@@ -1,8 +1,12 @@
+from __future__ import annotations
 from pydantic import BaseModel, Field
 from uuid import UUID
 from datetime import datetime
-from typing import List
-from src.books.schemas import Book
+from typing import List, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.books.schemas import Book
+    from src.reviews.schemas import ReviewModel
 
 
 class UserCreateModel(BaseModel):
@@ -27,6 +31,7 @@ class UserModel(BaseModel):
 
 class UserBooksModel(UserModel):
     books: List[Book]
+    reviews: List[ReviewModel]
 
 
 class UserLoginModel(BaseModel):
