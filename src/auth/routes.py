@@ -13,6 +13,7 @@ from .dependencies import (
     RoleChecker,
 )
 from src.db.redis import add_jti_to_blacklist
+from src.erros import UserAlreadyExists, UserNotFound, InvalidCredentials, InvalidToken
 
 auth_router = APIRouter()
 user_service = UserService()
@@ -30,10 +31,7 @@ async def create_user_account(
     email = user_data.email
 
     if await user_service.user_exists(email, session):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="User with this email already exists.",
-        )
+        raise UserAlreadyExists()
 
     user = await user_service.create_user(user_data, session)
     return user
@@ -76,10 +74,7 @@ async def login_users(
                 },
             )
 
-    raise HTTPException(
-        status_code=status.HTTP_403_FORBIDDEN,
-        detail="Invalid email or password.",
-    )
+    raise InvalidCredentials()
 
 
 @auth_router.get("/refresh_token")
@@ -97,10 +92,7 @@ async def get_new_access_token(token_details=Depends(RefreshTokenBearer())):
             },
         )
 
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Invalide or expired refresh token.",
-    )
+    raise InvalidToken()
 
 
 @auth_router.get("/me", response_model=UserBooksModel)

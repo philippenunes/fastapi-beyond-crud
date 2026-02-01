@@ -9,6 +9,13 @@ from src.db.main import get_session
 from .service import UserService
 from typing import List
 from src.db.models import User
+from src.erros import (
+    InvalidToken,
+    RefreshTokenRequired,
+    RevokedToken,
+    InsufficientPermission,
+    AccessTokenRequired,
+)
 
 user_service = UserService()
 
@@ -26,19 +33,10 @@ class TokenBearer(HTTPBearer):
         token_data = decode_token(token)
 
         if not self.token_valid(token):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Invalid or expired token.",
-            )
+            raise InvalidToken()
 
         if await token_in_blacklist(token_data["jti"]):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail={
-                    "error": "This token is invalid or has been revoked.",
-                    "resolution": "Please get a new token.",
-                },
-            )
+            raise RevokedToken()
 
         self.verify_token_data(token_data)
 
@@ -60,20 +58,14 @@ class AccessTokenBearer(TokenBearer):
 
     def verify_token_data(self, token_data: dict) -> None:
         if token_data and token_data["refresh"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Please provide an access token",
-            )
+            raise AccessTokenRequired()
 
 
 class RefreshTokenBearer(TokenBearer):
 
     def verify_token_data(self, token_data: dict) -> None:
         if token_data and not token_data["refresh"]:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Please provide a refresh token",
-            )
+            raise RefreshTokenRequired()
 
 
 async def get_current_user(
@@ -92,7 +84,4 @@ class RoleChecker:
     async def __call__(self, current_user: User = Depends(get_current_user)):
         user_role = current_user.role
         if user_role not in self.allowed_roles:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="You do not have permission to access this resource.",
-            )
+            raise InsufficientPermission()

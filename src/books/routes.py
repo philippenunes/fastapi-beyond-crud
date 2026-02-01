@@ -7,6 +7,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from .service import BookService
 from .schemas import BookCreateModel
 from src.auth.dependencies import AccessTokenBearer, RoleChecker
+from src.erros import BookNotFound
 
 book_router = APIRouter()
 book_service = BookService()
@@ -60,7 +61,7 @@ async def get_book(
     if book:
         return book
 
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    raise BookNotFound()
 
 
 @book_router.patch("/{book_uid}", dependencies=[role_checker])
@@ -74,7 +75,7 @@ async def update_book(
     if update_book:
         return {"message": "Book updated successfully", "book": update_book}
 
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    raise BookNotFound()
 
 
 @book_router.delete(
@@ -89,4 +90,4 @@ async def delete_book(
     if book_deleted:
         return
 
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Book not found")
+    raise BookNotFound()
