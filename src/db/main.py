@@ -10,7 +10,6 @@ import ssl
 
 async_engine = create_async_engine(
     re.sub(r"^postgresql:", "postgresql+asyncpg:", Config.DATABASE_URL),
-    echo=True,
     pool_pre_ping=True,
     pool_recycle=300,
     connect_args={
