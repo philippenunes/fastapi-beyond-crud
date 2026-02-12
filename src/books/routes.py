@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio.session import AsyncSession
 from .service import BookService
 from .schemas import BookCreateModel
 from src.auth.dependencies import AccessTokenBearer, RoleChecker
-from src.erros import BookNotFound
+from src.errors import BookNotFound
 
 book_router = APIRouter()
 book_service = BookService()

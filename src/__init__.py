@@ -5,7 +5,7 @@ from src.reviews import router as reviews_router
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from src.db.main import init_db
-from .erros import register_all_errors
+from .errors import register_all_errors
 
 
 @asynccontextmanager

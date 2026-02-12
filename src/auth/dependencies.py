@@ -9,7 +9,7 @@ from src.db.main import get_session
 from .service import UserService
 from typing import List
 from src.db.models import User
-from src.erros import (
+from src.errors import (
     InvalidToken,
     RefreshTokenRequired,
     RevokedToken,

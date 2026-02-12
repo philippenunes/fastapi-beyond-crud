@@ -13,7 +13,7 @@ from .dependencies import (
     RoleChecker,
 )
 from src.db.redis import add_jti_to_blacklist
-from src.erros import UserAlreadyExists, UserNotFound, InvalidCredentials, InvalidToken
+from src.errors import UserAlreadyExists, UserNotFound, InvalidCredentials, InvalidToken
 
 auth_router = APIRouter()
 user_service = UserService()
